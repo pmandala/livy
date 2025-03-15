@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  livy-server:
+    image: livy:1.0
+    build:
+      context: .
+    container_name: livy
+    hostname: livy
+    ports:
+      - '8998:8998'
+    volumes:
+      - ./data/inputs:/data/inputs
+      - ./data/outputs:/data/outputs
+      - ./jobs:/jobs
+      - ./logs:/logs
+    environment:
+      - SPARK_WORKLOAD=master
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_USER=spark
+      - SPARK_LOG_DIR=/logs/spark
+      - LIVY_LOG_DIR=/logs/livy
+
+
+#volumes:
+#  spark-inputs:
+
+
