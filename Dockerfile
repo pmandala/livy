@@ -49,6 +49,7 @@ RUN curl https://downloads.apache.org/incubator/livy/${LIVY_PATH}/apache-livy-${
         rm /tmp/apache-livy-${LIVY_VERSION}-bin.zip
 COPY livy.conf "$LIVY_HOME/conf"
 COPY livy-env.sh "$LIVY_HOME/conf"
+COPY log4j.properties "$LIVY_HOME/conf"
 ENV PATH="${LIVY_HOME}/bin:${PATH}"
 
 # Install python deps

@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-. "/opt/livy/bin/load-spark-env.sh"
-
-env 
+echo -e "\nExecuting `basename "$0"` script as user: `whoami`"
+uname -a
 
 /opt/livy/bin/livy-server start
 
