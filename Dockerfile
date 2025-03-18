@@ -1,11 +1,14 @@
 #
 FROM oraclelinux:7-slim
 
+ENV PIP_ROOT_USER_ACTION=ignore
+
 # SPARK
 ENV SPARK_VERSION=3.5.5
-ENV PIP_ROOT_USER_ACTION=ignore
+ENV HADOOP_VERSION=3.4.1
 ENV SPARK_HOME="/opt/spark"
 ENV HADOOP_HOME="/opt/hadoop"
+ENV HADOOP_CONF_DIR="/opt/hadoop/etc/hadoop/"
 #ENV SPARK_MASTER_HOST=spark-master
 #ENV SPARK_MASTER_PORT=7077
 #ENV SPARK_MASTER="spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT}"
@@ -32,24 +35,30 @@ RUN yum update -y && \
 
 WORKDIR ${SPARK_HOME}
 
-# SPARK with HADOOP
+# Download and install Hadoop
+COPY hadoop-${HADOOP_VERSION}.tar.gz .
+# RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz -P /tmp/ && \
+RUN tar -xvzf ./hadoop-${HADOOP_VERSION}.tar.gz --directory /opt/hadoop --strip-components 1 && \
+         rm -rf ./hadoop-${HADOOP_VERSION}.tar.gz
+ENV PATH="$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:"
+
+
+# Download and install Spark
 COPY spark-${SPARK_VERSION}-bin-hadoop3.tgz .
 # RUN curl https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz -o spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
 RUN tar xvzf ./spark-${SPARK_VERSION}-bin-hadoop3.tgz --directory /opt/spark --strip-components 1 && \
-    rm -rf ./spark-${SPARK_VERSION}-bin-hadoop3.tgz
-COPY spark-defaults.conf "$SPARK_HOME/conf"
-ENV PATH="$SPARK_HOME/sbin:$SPARK_HOME/bin:${PATH}"
-RUN chmod u+x $SPARK_HOME/sbin/* && \
+    rm -rf ./spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
+    chmod u+x $SPARK_HOME/sbin/* && \
     chmod u+x $SPARK_HOME/bin/*
+COPY spark/* "$SPARK_HOME/conf"
+ENV PATH="$SPARK_HOME/sbin:$SPARK_HOME/bin:${PATH}"
 
 # LIVY
 RUN curl https://downloads.apache.org/incubator/livy/${LIVY_PATH}/apache-livy-${LIVY_VERSION}-bin.zip -o /tmp/apache-livy-${LIVY_VERSION}-bin.zip && \
         unzip /tmp/apache-livy-${LIVY_VERSION}-bin.zip -d /opt && \
         mv /opt/apache-livy-${LIVY_VERSION}-bin ${LIVY_HOME} && \
         rm /tmp/apache-livy-${LIVY_VERSION}-bin.zip
-COPY livy.conf "$LIVY_HOME/conf"
-COPY livy-env.sh "$LIVY_HOME/conf"
-COPY log4j.properties "$LIVY_HOME/conf"
+COPY livy/* "$LIVY_HOME/conf"
 ENV PATH="${LIVY_HOME}/bin:${PATH}"
 
 # Install python deps
